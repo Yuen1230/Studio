@@ -8,7 +8,7 @@
   <!-- FullCalendar CSS -->
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet" />
 
-  <!-- Firebase 相容版 SDK -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -29,7 +29,7 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
-      padding: 12px 6px;
+      padding: 12px 8px;
       background-color: var(--bg-color);
       color: var(--text-main);
     }
@@ -81,87 +81,51 @@
     .btn-edit-action { background-color: var(--primary-color); color: white; width: 100%; padding: 12px; margin-bottom: 8px; font-size: 15px; }
     .btn-delete-action { background-color: #ef4444; color: white; width: 100%; padding: 12px; margin-bottom: 8px; font-size: 15px; }
     
-    #calendar {
+    .calendar-wrapper {
       max-width: 1040px;
       margin: 0 auto;
       background: var(--card-bg);
-      padding: 8px;
+      padding: 10px;
       border-radius: 16px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      overflow-x: auto; /* 允許橫向滑動機制 */
     }
 
-    /* 全區覆寫：確保文字完全顯示不裁切 */
-    .fc-daygrid-event {
-      white-space: normal !important; /* 允許自動換行 */
-    }
-    .fc-daygrid-event-harness {
-      margin-bottom: 4px !important;
+    #calendar {
+      min-width: 100%;
     }
 
-    /* 手機版適應高度與滿格顯示 */
-    .fc-daygrid-day-frame {
-      min-height: 80px !important;
-      cursor: pointer;
-    }
-
-    /* 卡片視覺設計優化 */
+    /* 月曆表格與卡片基礎 */
     .fc-event {
       border: none !important;
       border-radius: 6px !important;
       padding: 0 !important;
+      margin-bottom: 4px !important;
       cursor: pointer;
-      overflow: hidden;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
     .event-card {
       display: flex;
       flex-direction: column;
       gap: 2px;
-      padding: 4px 4px 4px 8px;
-      font-size: 10px;
-      line-height: 1.2;
+      padding: 4px 6px;
+      font-size: 11px;
       position: relative;
-      word-break: break-word; /* 長字自動換行 */
     }
 
-    /* 背景色彩 */
     .bg-daiben { background-color: #e0f2fe; color: #0369a1; }
     .bg-party { background-color: #ffedd5; color: #c2410c; }
     .bg-other { background-color: #f1f5f9; color: #334155; }
     .bg-closed { background-color: #fef2f2; color: #991b1b; }
 
-    .category-left-bar {
-      width: 3px;
-      height: 100%;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-
     .card-top {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      font-size: 9px;
+      font-size: 10px;
       font-weight: 600;
     }
-    .staff-badge {
-      background: rgba(255, 255, 255, 0.8);
-      padding: 0px 3px;
-      border-radius: 3px;
-      font-size: 9px;
-    }
-
-    .card-main {
-      font-weight: 700;
-      font-size: 11px;
-    }
-
-    .card-footer {
-      font-size: 9px;
-      opacity: 0.85;
-    }
+    .card-main { font-weight: 700; font-size: 12px; }
+    .card-footer { font-size: 10px; opacity: 0.8; }
 
     /* Modal 彈出視窗 */
     .modal-overlay {
@@ -202,24 +166,20 @@
     .form-row { display: flex; gap: 10px; }
     .form-row .form-group { flex: 1; }
 
-    /* RWD 手機版響應式設計 */
+    /* RWD 手機版最佳化 */
     @media (max-width: 768px) {
-      body { padding: 8px 4px; }
+      #calendar {
+        min-width: 500px; /* 在手機月檢視時保持最少 500px 寬度，可橫向滑動不被擠壓 */
+      }
       .header { flex-direction: column; align-items: flex-start; }
       .header-title-group { justify-content: space-between; width: 100%; }
       .btn-group { width: 100%; justify-content: flex-end; margin-top: 4px; }
       
       .fc .fc-toolbar {
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
       }
-      .fc .fc-toolbar-title { font-size: 15px !important; }
-      .fc .fc-button { padding: 4px 6px !important; font-size: 11px !important; }
-
-      /* 手機版將欄位邊框稍微減小，讓空間更大 */
-      .fc-theme-standard td, .fc-theme-standard th {
-        padding: 0 !important;
-      }
+      .fc .fc-toolbar-title { font-size: 16px !important; }
 
       .modal-overlay { align-items: flex-end; }
       .modal-content {
@@ -251,7 +211,9 @@
     </div>
   </div>
 
-  <div id="calendar"></div>
+  <div class="calendar-wrapper">
+    <div id="calendar"></div>
+  </div>
 
   <!-- 新增/修改預約 Modal -->
   <div id="eventModal" class="modal-overlay">
@@ -351,23 +313,23 @@
 
     document.addEventListener('DOMContentLoaded', function() {
       const calendarEl = document.getElementById('calendar');
+      const isMobile = window.innerWidth < 768;
 
       calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        height: 'auto', // 自動延伸整體日曆高度，避免手機版內容折疊
-        dayMaxEvents: false, // 關閉「+ more」按鈕，強制把所有預約完全展開
+        // 手機版預設使用列表模式 (listMonth)，電腦版使用月表格 (dayGridMonth)
+        initialView: isMobile ? 'listMonth' : 'dayGridMonth',
         
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          right: isMobile ? 'listMonth,dayGridMonth' : 'dayGridMonth,timeGridWeek,listMonth'
         },
         
         buttonText: {
           today: '今天',
-          month: '月',
-          week: '週',
-          day: '日'
+          month: '網格',
+          list: '列表',
+          week: '週'
         },
 
         displayEventEnd: true,
@@ -404,10 +366,9 @@
 
           let html = `
             <div class="event-card ${bgClass}">
-              <div class="category-left-bar" style="background-color: ${categoryColor};"></div>
               <div class="card-top">
                 <span>${timeText}</span>
-                ${categoryName !== "不開放" ? `<span class="staff-badge">👤 ${staff}</span>` : ''}
+                ${categoryName !== "不開放" ? `<span>👤 ${staff}</span>` : ''}
               </div>
               <div class="card-main">${itemIcon} ${categoryName === "不開放" ? "不開放" : item}</div>
               <div class="card-footer">[${categoryName}]${note ? ` - ${note}` : ''}</div>
