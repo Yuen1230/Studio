@@ -29,7 +29,7 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
-      padding: 12px 8px;
+      padding: 12px 6px;
       background-color: var(--bg-color);
       color: var(--text-main);
     }
@@ -85,97 +85,85 @@
       max-width: 1040px;
       margin: 0 auto;
       background: var(--card-bg);
-      padding: 12px;
+      padding: 8px;
       border-radius: 16px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     }
 
-    /* 手機版加大日曆每格觸控區域 */
+    /* 全區覆寫：確保文字完全顯示不裁切 */
+    .fc-daygrid-event {
+      white-space: normal !important; /* 允許自動換行 */
+    }
+    .fc-daygrid-event-harness {
+      margin-bottom: 4px !important;
+    }
+
+    /* 手機版適應高度與滿格顯示 */
     .fc-daygrid-day-frame {
-      min-height: 75px !important;
+      min-height: 80px !important;
       cursor: pointer;
     }
 
-    /* FullCalendar 卡片視覺重構 */
+    /* 卡片視覺設計優化 */
     .fc-event {
       border: none !important;
       border-radius: 6px !important;
       padding: 0 !important;
-      margin-bottom: 3px !important;
       cursor: pointer;
       overflow: hidden;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      transition: transform 0.15s ease;
-    }
-    .fc-event:active {
-      transform: scale(0.98);
     }
 
-    /* 精緻淺色卡片內文排版 */
     .event-card {
       display: flex;
       flex-direction: column;
       gap: 2px;
-      padding: 5px 6px 5px 10px;
-      font-size: 11px;
+      padding: 4px 4px 4px 8px;
+      font-size: 10px;
+      line-height: 1.2;
       position: relative;
+      word-break: break-word; /* 長字自動換行 */
     }
 
-    /* 活動項目對應柔和淺色背景 */
-    .bg-daiben { background-color: #e0f2fe; color: #0369a1; } /* 淺藍 - 帶本 */
-    .bg-party { background-color: #ffedd5; color: #c2410c; }  /* 淺橘 - Party */
-    .bg-other { background-color: #f1f5f9; color: #334155; }  /* 淺灰 - 其他 */
-    .bg-closed { background-color: #fef2f2; color: #991b1b; } /* 淺紅 - 不開放 */
+    /* 背景色彩 */
+    .bg-daiben { background-color: #e0f2fe; color: #0369a1; }
+    .bg-party { background-color: #ffedd5; color: #c2410c; }
+    .bg-other { background-color: #f1f5f9; color: #334155; }
+    .bg-closed { background-color: #fef2f2; color: #991b1b; }
 
-    /* 左側類型邊條 */
     .category-left-bar {
-      width: 4px;
+      width: 3px;
       height: 100%;
       position: absolute;
       top: 0;
       left: 0;
-      border-radius: 4px 0 0 4px;
     }
 
     .card-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 10px;
-      opacity: 0.85;
-    }
-    .event-time { font-weight: 600; letter-spacing: -0.2px; }
-    .staff-badge {
-      background: rgba(255, 255, 255, 0.7);
-      border: 1px solid rgba(0, 0, 0, 0.05);
-      padding: 0px 4px;
-      border-radius: 3px;
+      font-size: 9px;
       font-weight: 600;
+    }
+    .staff-badge {
+      background: rgba(255, 255, 255, 0.8);
+      padding: 0px 3px;
+      border-radius: 3px;
       font-size: 9px;
     }
 
     .card-main {
       font-weight: 700;
-      font-size: 12px;
-      margin: 1px 0;
-      display: flex;
-      align-items: center;
-      gap: 3px;
+      font-size: 11px;
     }
 
     .card-footer {
       font-size: 9px;
-      opacity: 0.75;
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      opacity: 0.85;
     }
-    .note-text { font-style: italic; }
 
-    /* Modal 彈出視窗樣式 */
+    /* Modal 彈出視窗 */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -214,18 +202,24 @@
     .form-row { display: flex; gap: 10px; }
     .form-row .form-group { flex: 1; }
 
-    /* RWD 手機優化 */
+    /* RWD 手機版響應式設計 */
     @media (max-width: 768px) {
+      body { padding: 8px 4px; }
       .header { flex-direction: column; align-items: flex-start; }
       .header-title-group { justify-content: space-between; width: 100%; }
       .btn-group { width: 100%; justify-content: flex-end; margin-top: 4px; }
       
       .fc .fc-toolbar {
         flex-direction: column;
-        gap: 8px;
+        gap: 6px;
       }
-      .fc .fc-toolbar-title { font-size: 16px !important; }
-      .fc .fc-button { padding: 5px 8px !important; font-size: 11px !important; }
+      .fc .fc-toolbar-title { font-size: 15px !important; }
+      .fc .fc-button { padding: 4px 6px !important; font-size: 11px !important; }
+
+      /* 手機版將欄位邊框稍微減小，讓空間更大 */
+      .fc-theme-standard td, .fc-theme-standard th {
+        padding: 0 !important;
+      }
 
       .modal-overlay { align-items: flex-end; }
       .modal-content {
@@ -360,7 +354,8 @@
 
       calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        aspectRatio: window.innerWidth < 768 ? 0.8 : 1.35,
+        height: 'auto', // 自動延伸整體日曆高度，避免手機版內容折疊
+        dayMaxEvents: false, // 關閉「+ more」按鈕，強制把所有預約完全展開
         
         headerToolbar: {
           left: 'prev,next today',
@@ -411,28 +406,21 @@
             <div class="event-card ${bgClass}">
               <div class="category-left-bar" style="background-color: ${categoryColor};"></div>
               <div class="card-top">
-                <span class="event-time">${timeText}</span>
+                <span>${timeText}</span>
                 ${categoryName !== "不開放" ? `<span class="staff-badge">👤 ${staff}</span>` : ''}
               </div>
-              <div class="card-main">
-                <span>${itemIcon} ${categoryName === "不開放" ? "不開放" : item}</span>
-              </div>
-              <div class="card-footer">
-                <span>[${categoryName}]</span>
-                ${note ? `<span class="note-text">- ${note}</span>` : ''}
-              </div>
+              <div class="card-main">${itemIcon} ${categoryName === "不開放" ? "不開放" : item}</div>
+              <div class="card-footer">[${categoryName}]${note ? ` - ${note}` : ''}</div>
             </div>
           `;
           return { html: html };
         },
 
-        // 點擊空白日期新增
         dateClick: function(info) {
           if (!isAdmin) return;
           openAddModalDirectly(info.dateStr);
         },
 
-        // 點擊預約卡片
         eventClick: function(info) {
           if (!isAdmin) return;
           activeClickedEvent = info.event;
@@ -463,7 +451,6 @@
       });
     });
 
-    // 手機版快捷按鈕：直接打開新增彈窗
     function openAddModalDirectly(defaultDate = "") {
       editingEventId = null;
       document.getElementById('modalTitle').innerText = "新增預約";
