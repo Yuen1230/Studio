@@ -29,7 +29,7 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
-      padding: 12px 8px;
+      padding: 12px 6px;
       background-color: var(--bg-color);
       color: var(--text-main);
     }
@@ -81,36 +81,35 @@
     .btn-edit-action { background-color: var(--primary-color); color: white; width: 100%; padding: 12px; margin-bottom: 8px; font-size: 15px; }
     .btn-delete-action { background-color: #ef4444; color: white; width: 100%; padding: 12px; margin-bottom: 8px; font-size: 15px; }
     
-    .calendar-wrapper {
+    #calendar {
       max-width: 1040px;
       margin: 0 auto;
       background: var(--card-bg);
-      padding: 10px;
+      padding: 6px;
       border-radius: 16px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-      overflow-x: auto; /* 允許橫向滑動機制 */
     }
 
-    #calendar {
-      min-width: 100%;
+    .fc-daygrid-event-harness {
+      margin-bottom: 2px !important;
     }
 
-    /* 月曆表格與卡片基礎 */
     .fc-event {
       border: none !important;
-      border-radius: 6px !important;
+      border-radius: 4px !important;
       padding: 0 !important;
-      margin-bottom: 4px !important;
       cursor: pointer;
     }
 
+    /* 卡片通用樣式 */
     .event-card {
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      padding: 4px 6px;
-      font-size: 11px;
-      position: relative;
+      gap: 1px;
+      padding: 3px 4px;
+      font-size: 10px;
+      line-height: 1.2;
+      border-radius: 4px;
     }
 
     .bg-daiben { background-color: #e0f2fe; color: #0369a1; }
@@ -121,11 +120,56 @@
     .card-top {
       display: flex;
       justify-content: space-between;
-      font-size: 10px;
+      align-items: center;
       font-weight: 600;
+      white-space: nowrap;
     }
-    .card-main { font-weight: 700; font-size: 12px; }
-    .card-footer { font-size: 10px; opacity: 0.8; }
+    .card-main { font-weight: 700; font-size: 11px; }
+    .card-footer { font-size: 9px; opacity: 0.8; }
+
+    /* 手機版極簡化控制 */
+    @media (max-width: 768px) {
+      body { padding: 8px 4px; }
+      
+      .header { flex-direction: column; align-items: flex-start; }
+      .header-title-group { justify-content: space-between; width: 100%; }
+      .btn-group { width: 100%; justify-content: flex-end; margin-top: 4px; }
+      
+      .fc .fc-toolbar {
+        flex-direction: column;
+        gap: 6px;
+      }
+      .fc .fc-toolbar-title { font-size: 15px !important; }
+      .fc .fc-button { padding: 4px 6px !important; font-size: 11px !important; }
+
+      .fc-theme-standard td, .fc-theme-standard th {
+        padding: 0 !important;
+      }
+
+      /* 在手機版隱藏複雜的詳細內容，只留「時間與人員」 */
+      .desktop-only {
+        display: none !important;
+      }
+
+      .event-card {
+        padding: 2px 3px;
+      }
+
+      .mobile-simple-title {
+        font-size: 10px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    /* 電腦版顯示完整內容，隱藏手機極簡標題 */
+    @media (min-width: 769px) {
+      .mobile-only {
+        display: none !important;
+      }
+    }
 
     /* Modal 彈出視窗 */
     .modal-overlay {
@@ -166,21 +210,7 @@
     .form-row { display: flex; gap: 10px; }
     .form-row .form-group { flex: 1; }
 
-    /* RWD 手機版最佳化 */
     @media (max-width: 768px) {
-      #calendar {
-        min-width: 500px; /* 在手機月檢視時保持最少 500px 寬度，可橫向滑動不被擠壓 */
-      }
-      .header { flex-direction: column; align-items: flex-start; }
-      .header-title-group { justify-content: space-between; width: 100%; }
-      .btn-group { width: 100%; justify-content: flex-end; margin-top: 4px; }
-      
-      .fc .fc-toolbar {
-        flex-direction: column;
-        gap: 8px;
-      }
-      .fc .fc-toolbar-title { font-size: 16px !important; }
-
       .modal-overlay { align-items: flex-end; }
       .modal-content {
         width: 100%;
@@ -211,9 +241,7 @@
     </div>
   </div>
 
-  <div class="calendar-wrapper">
-    <div id="calendar"></div>
-  </div>
+  <div id="calendar"></div>
 
   <!-- 新增/修改預約 Modal -->
   <div id="eventModal" class="modal-overlay">
@@ -313,26 +341,26 @@
 
     document.addEventListener('DOMContentLoaded', function() {
       const calendarEl = document.getElementById('calendar');
-      const isMobile = window.innerWidth < 768;
 
       calendar = new FullCalendar.Calendar(calendarEl, {
-        // 手機版預設使用列表模式 (listMonth)，電腦版使用月表格 (dayGridMonth)
-        initialView: isMobile ? 'listMonth' : 'dayGridMonth',
+        initialView: 'dayGridMonth', // 保持原本網格月視圖
+        height: 'auto',
+        dayMaxEvents: false,
         
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
-          right: isMobile ? 'listMonth,dayGridMonth' : 'dayGridMonth,timeGridWeek,listMonth'
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
         
         buttonText: {
           today: '今天',
-          month: '網格',
-          list: '列表',
-          week: '週'
+          month: '月',
+          week: '週',
+          day: '日'
         },
 
-        displayEventEnd: true,
+        displayEventEnd: false, // 在手機上省去結束時間，介面更乾淨
         eventTimeFormat: {
           hour: '2-digit',
           minute: '2-digit',
@@ -346,32 +374,38 @@
           const props = arg.event.extendedProps || {};
           const catSplitted = (props.category || "工作|#3b82f6").split('|');
           const categoryName = catSplitted[0];
-          const categoryColor = catSplitted[1] || "#3b82f6";
           
           const item = props.item || "其他";
           const staff = props.staff || "Kensy";
           const note = props.note || "";
-          let timeText = arg.timeText;
+          
+          // 計算開始時間 (例如 10:00)
+          let timeOnly = arg.timeText.split('-')[0].trim();
 
           let bgClass = "bg-other";
-          let itemIcon = "📌";
+          let itemIcon = "📖";
           if (item === "帶本") { bgClass = "bg-daiben"; itemIcon = "📖"; }
           if (item === "Party") { bgClass = "bg-party"; itemIcon = "🎉"; }
 
           if (categoryName === "不開放") {
             bgClass = "bg-closed";
-            itemIcon = "🚫";
-            timeText = "全天";
+            timeOnly = "全天";
           }
 
           let html = `
             <div class="event-card ${bgClass}">
-              <div class="card-top">
-                <span>${timeText}</span>
+              <!-- 手機版專屬：僅顯示時間 + 負責人 (不開放時顯示不開放) -->
+              <div class="mobile-only mobile-simple-title">
+                ${categoryName === "不開放" ? "🔴 不開放" : `${timeOnly} ${staff}`}
+              </div>
+
+              <!-- 電腦版完整內容 -->
+              <div class="desktop-only card-top">
+                <span>${arg.timeText}</span>
                 ${categoryName !== "不開放" ? `<span>👤 ${staff}</span>` : ''}
               </div>
-              <div class="card-main">${itemIcon} ${categoryName === "不開放" ? "不開放" : item}</div>
-              <div class="card-footer">[${categoryName}]${note ? ` - ${note}` : ''}</div>
+              <div class="desktop-only card-main">${itemIcon} ${categoryName === "不開放" ? "不開放" : item}</div>
+              <div class="desktop-only card-footer">[${categoryName}]${note ? ` - ${note}` : ''}</div>
             </div>
           `;
           return { html: html };
