@@ -230,8 +230,8 @@
         font-size: 16px !important;
       }
       .fc .fc-button {
-        padding: 4px 8px !important;
-        font-size: 12px !important;
+        padding: 4px 6px !important;
+        font-size: 11px !important;
       }
 
       /* 手機 Modal 改為底部彈出 */
@@ -341,7 +341,7 @@
   
   <script>
     // -------------------------------------------------------------
-    // 1. Firebase 資料庫初始化 (使用你的真實金鑰)
+    // 1. Firebase 資料庫初始化
     // -------------------------------------------------------------
     const firebaseConfig = {
       apiKey: "AIzaSyAuuJDMEHBLPToulUTnqKyPSvmpB5RKjgQ",
@@ -370,12 +370,22 @@
       calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         aspectRatio: window.innerWidth < 768 ? 0.85 : 1.35,
+        
+        // 增加 dayGridMonth, timeGridWeek, timeGridDay 三種視圖按鈕
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
-          right: 'dayGridMonth,timeGridWeek'
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
         
+        // 按鈕繁體中文顯示設定
+        buttonText: {
+          today: '今天',
+          month: '月',
+          week: '週',
+          day: '日'
+        },
+
         displayEventEnd: true,
         eventTimeFormat: {
           hour: '2-digit',
@@ -460,7 +470,7 @@
       calendar.render();
 
       // -------------------------------------------------------------
-      // 2. 雲端即時監聽：雲端有更新，自動刷洗月曆畫面
+      // 2. 雲端即時監聽
       // -------------------------------------------------------------
       const syncStatus = document.getElementById('syncStatus');
       eventsRef.on('value', (snapshot) => {
@@ -528,7 +538,6 @@
         }
       };
 
-      // 直接寫入 Firebase (雲端會自動觸發 eventsRef.on 更新所有人畫面)
       eventsRef.child(eventId).set(newEventObj).then(() => {
         closeModal();
       });
