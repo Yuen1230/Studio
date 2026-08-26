@@ -29,7 +29,7 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
-      padding: 16px 12px;
+      padding: 12px 8px;
       background-color: var(--bg-color);
       color: var(--text-main);
     }
@@ -39,15 +39,15 @@
       justify-content: space-between;
       align-items: center;
       max-width: 1040px;
-      margin: 0 auto 16px auto;
-      gap: 12px;
+      margin: 0 auto 12px auto;
+      gap: 8px;
     }
     .header-title-group {
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    h1 { margin: 0; font-size: 20px; font-weight: 700; color: #0f172a; }
+    h1 { margin: 0; font-size: 18px; font-weight: 700; color: #0f172a; }
 
     .sync-badge {
       font-size: 11px;
@@ -58,8 +58,13 @@
       color: #854d0e;
     }
 
+    .btn-group {
+      display: flex;
+      gap: 6px;
+    }
+
     .btn {
-      padding: 8px 14px;
+      padding: 8px 12px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
@@ -69,7 +74,7 @@
       white-space: nowrap;
     }
     .btn-admin { background-color: var(--primary-color); color: white; }
-    .btn-admin:hover { opacity: 0.9; }
+    .btn-add-event { background-color: #10b981; color: white; display: none; }
     .btn-logout { background-color: #ef4444; color: white; display: none; }
     .btn-save { background-color: #10b981; color: white; width: 100%; margin-top: 16px; padding: 12px; font-size: 15px; }
     .btn-cancel { background-color: #e2e8f0; color: #334155; width: 100%; margin-top: 8px; padding: 10px; font-size: 14px; }
@@ -80,9 +85,15 @@
       max-width: 1040px;
       margin: 0 auto;
       background: var(--card-bg);
-      padding: 16px;
+      padding: 12px;
       border-radius: 16px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    /* 手機版加大日曆每格觸控區域 */
+    .fc-daygrid-day-frame {
+      min-height: 75px !important;
+      cursor: pointer;
     }
 
     /* FullCalendar 卡片視覺重構 */
@@ -126,7 +137,6 @@
       border-radius: 4px 0 0 4px;
     }
 
-    /* 卡片頂部：時間 + 人員標籤 */
     .card-top {
       display: flex;
       justify-content: space-between;
@@ -134,10 +144,7 @@
       font-size: 10px;
       opacity: 0.85;
     }
-    .event-time {
-      font-weight: 600;
-      letter-spacing: -0.2px;
-    }
+    .event-time { font-weight: 600; letter-spacing: -0.2px; }
     .staff-badge {
       background: rgba(255, 255, 255, 0.7);
       border: 1px solid rgba(0, 0, 0, 0.05);
@@ -147,7 +154,6 @@
       font-size: 9px;
     }
 
-    /* 卡片中部：項目標題 */
     .card-main {
       font-weight: 700;
       font-size: 12px;
@@ -157,7 +163,6 @@
       gap: 3px;
     }
 
-    /* 卡片底部：類型與備註 */
     .card-footer {
       font-size: 9px;
       opacity: 0.75;
@@ -168,9 +173,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .note-text {
-      font-style: italic;
-    }
+    .note-text { font-style: italic; }
 
     /* Modal 彈出視窗樣式 */
     .modal-overlay {
@@ -208,36 +211,23 @@
       border-color: var(--primary-color);
       background-color: #fff;
     }
-    .form-row {
-      display: flex;
-      gap: 10px;
-    }
+    .form-row { display: flex; gap: 10px; }
     .form-row .form-group { flex: 1; }
 
-    /* RWD 手機與 iPad 響應式優化 */
+    /* RWD 手機優化 */
     @media (max-width: 768px) {
-      body { padding: 12px 8px; }
-      .header { flex-direction: row; margin-bottom: 12px; }
-      h1 { font-size: 18px; }
-      #calendar { padding: 10px; border-radius: 12px; }
-
-      /* 日曆工具列縮放 */
+      .header { flex-direction: column; align-items: flex-start; }
+      .header-title-group { justify-content: space-between; width: 100%; }
+      .btn-group { width: 100%; justify-content: flex-end; margin-top: 4px; }
+      
       .fc .fc-toolbar {
         flex-direction: column;
         gap: 8px;
       }
-      .fc .fc-toolbar-title {
-        font-size: 16px !important;
-      }
-      .fc .fc-button {
-        padding: 4px 6px !important;
-        font-size: 11px !important;
-      }
+      .fc .fc-toolbar-title { font-size: 16px !important; }
+      .fc .fc-button { padding: 5px 8px !important; font-size: 11px !important; }
 
-      /* 手機 Modal 改為底部彈出 */
-      .modal-overlay {
-        align-items: flex-end;
-      }
+      .modal-overlay { align-items: flex-end; }
       .modal-content {
         width: 100%;
         max-width: 100%;
@@ -260,9 +250,10 @@
       <h1>工作室開放日程</h1>
       <span id="syncStatus" class="sync-badge">連線中...</span>
     </div>
-    <div>
+    <div class="btn-group">
+      <button id="addEventBtn" class="btn btn-add-event" onclick="openAddModalDirectly()">➕ 新增預約</button>
       <button id="adminBtn" class="btn btn-admin" onclick="toggleAdmin()">負責人登入</button>
-      <button id="logoutBtn" class="btn btn-logout" onclick="logout()">登出管理</button>
+      <button id="logoutBtn" class="btn btn-logout" onclick="logout()">登出</button>
     </div>
   </div>
 
@@ -273,6 +264,11 @@
     <div class="modal-content">
       <h3 id="modalTitle">新增預約</h3>
       
+      <div class="form-group">
+        <label>預約日期</label>
+        <input type="date" id="modalDate">
+      </div>
+
       <div class="form-group">
         <label>活動類型</label>
         <select id="modalCategory" onchange="handleCategoryChange()">
@@ -324,7 +320,7 @@
     </div>
   </div>
 
-  <!-- 點擊預約時的操作選擇 Modal -->
+  <!-- 操作選擇 Modal -->
   <div id="actionModal" class="modal-overlay">
     <div class="modal-content">
       <h3>請選擇操作</h3>
@@ -340,9 +336,6 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
   
   <script>
-    // -------------------------------------------------------------
-    // 1. Firebase 資料庫初始化
-    // -------------------------------------------------------------
     const firebaseConfig = {
       apiKey: "AIzaSyAuuJDMEHBLPToulUTnqKyPSvmpB5RKjgQ",
       authDomain: "studiocalender-f52d4.firebaseapp.com",
@@ -357,10 +350,8 @@
     const db = firebase.database();
     const eventsRef = db.ref('studio_calendar_events');
 
-    // 全域變數
     let isAdmin = false;
     let calendar;
-    let selectedDateStr = "";
     let editingEventId = null;
     let activeClickedEvent = null;
 
@@ -369,16 +360,14 @@
 
       calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        aspectRatio: window.innerWidth < 768 ? 0.85 : 1.35,
+        aspectRatio: window.innerWidth < 768 ? 0.8 : 1.35,
         
-        // 增加 dayGridMonth, timeGridWeek, timeGridDay 三種視圖按鈕
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
           right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
         
-        // 按鈕繁體中文顯示設定
         buttonText: {
           today: '今天',
           month: '月',
@@ -396,7 +385,6 @@
         selectable: false,
         editable: false,
 
-        // 卡片樣式渲染
         eventContent: function(arg) {
           const props = arg.event.extendedProps || {};
           const catSplitted = (props.category || "工作|#3b82f6").split('|');
@@ -439,21 +427,9 @@
         },
 
         // 點擊空白日期新增
-        select: function(info) {
+        dateClick: function(info) {
           if (!isAdmin) return;
-          editingEventId = null;
-          selectedDateStr = info.startStr.split('T')[0];
-          document.getElementById('modalTitle').innerText = "新增預約";
-          
-          document.getElementById('modalCategory').value = "工作|#3b82f6";
-          document.getElementById('modalItem').value = "帶本";
-          document.getElementById('modalStaff').value = "Kensy";
-          document.getElementById('modalCustomTitle').value = "";
-          document.getElementById('modalStartTime').value = "10:00";
-          document.getElementById('modalEndTime').value = "18:00";
-          
-          handleCategoryChange();
-          document.getElementById('eventModal').style.display = 'flex';
+          openAddModalDirectly(info.dateStr);
         },
 
         // 點擊預約卡片
@@ -469,17 +445,10 @@
 
       calendar.render();
 
-      // -------------------------------------------------------------
-      // 2. 雲端即時監聽
-      // -------------------------------------------------------------
       const syncStatus = document.getElementById('syncStatus');
       eventsRef.on('value', (snapshot) => {
         const cloudData = snapshot.val() || {};
-        
-        // 清空當前日曆
         calendar.removeAllEvents();
-
-        // 將 Firebase 數據匯入 FullCalendar
         Object.keys(cloudData).forEach(key => {
           calendar.addEvent(cloudData[key]);
         });
@@ -494,10 +463,32 @@
       });
     });
 
-    // -------------------------------------------------------------
-    // 3. 事件儲存與寫入雲端
-    // -------------------------------------------------------------
+    // 手機版快捷按鈕：直接打開新增彈窗
+    function openAddModalDirectly(defaultDate = "") {
+      editingEventId = null;
+      document.getElementById('modalTitle').innerText = "新增預約";
+      
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('modalDate').value = defaultDate || todayStr;
+
+      document.getElementById('modalCategory').value = "工作|#3b82f6";
+      document.getElementById('modalItem').value = "帶本";
+      document.getElementById('modalStaff').value = "Kensy";
+      document.getElementById('modalCustomTitle').value = "";
+      document.getElementById('modalStartTime').value = "10:00";
+      document.getElementById('modalEndTime').value = "18:00";
+      
+      handleCategoryChange();
+      document.getElementById('eventModal').style.display = 'flex';
+    }
+
     function saveModalEvent() {
+      const selectedDate = document.getElementById('modalDate').value;
+      if (!selectedDate) {
+        alert("請選擇預約日期！");
+        return;
+      }
+
       const catValue = document.getElementById('modalCategory').value;
       const [categoryName, categoryColor] = catValue.split('|');
       const itemName = document.getElementById('modalItem').value;
@@ -515,8 +506,8 @@
         return;
       }
 
-      const startISO = `${selectedDateStr}T${startTime}:00`;
-      const endISO = `${selectedDateStr}T${endTime}:00`;
+      const startISO = `${selectedDate}T${startTime}:00`;
+      const endISO = `${selectedDate}T${endTime}:00`;
 
       if (isTimeOverlapping(startISO, endISO, editingEventId)) {
         alert("⚠️ 該時段已有其他活動重疊（Crush），請選擇其他時間！");
@@ -543,7 +534,6 @@
       });
     }
 
-    // 刪除事件
     function onChooseDelete() {
       if (!activeClickedEvent) return;
       closeActionModal();
@@ -554,7 +544,6 @@
       activeClickedEvent = null;
     }
 
-    // 拖曳或縮放時間變更時，同步寫入 Firebase
     function handleEventChange(changeInfo) {
       const newStart = changeInfo.event.startStr;
       const newEnd = changeInfo.event.endStr;
@@ -576,7 +565,6 @@
       }
     }
 
-    // 時間重疊碰撞檢查
     function isTimeOverlapping(newStart, newEnd, ignoreEventId = null) {
       const allEvents = calendar.getEvents();
       const newStartMs = new Date(newStart).getTime();
@@ -595,15 +583,15 @@
       return false;
     }
 
-    // 選擇修改
     function onChooseEdit() {
       if (!activeClickedEvent) return;
       closeActionModal();
 
       editingEventId = activeClickedEvent.id;
-      selectedDateStr = activeClickedEvent.startStr.split('T')[0];
+      const selectedDate = activeClickedEvent.startStr.split('T')[0];
       
       document.getElementById('modalTitle').innerText = "修改預約";
+      document.getElementById('modalDate').value = selectedDate;
       
       const props = activeClickedEvent.extendedProps || {};
       document.getElementById('modalCategory').value = props.category || "工作|#3b82f6";
@@ -653,10 +641,11 @@
         isAdmin = true;
         document.getElementById('adminBtn').style.display = 'none';
         document.getElementById('logoutBtn').style.display = 'inline-block';
+        document.getElementById('addEventBtn').style.display = 'inline-block';
         
         calendar.setOption('selectable', true);
         calendar.setOption('editable', true);
-        alert('已登入負責人模式！直接點擊日曆即可新增或修改預約。');
+        alert('已登入負責人模式！可以點擊頂部「➕ 新增預約」按鈕或直接點擊日曆。');
       } else if (password !== null) {
         alert('密碼錯誤！');
       }
@@ -666,6 +655,7 @@
       isAdmin = false;
       document.getElementById('adminBtn').style.display = 'inline-block';
       document.getElementById('logoutBtn').style.display = 'none';
+      document.getElementById('addEventBtn').style.display = 'none';
       
       calendar.setOption('selectable', false);
       calendar.setOption('editable', false);
