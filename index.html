@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>工作室日程表</title>
   
-  <!-- TailWind CSS (樣式庫) -->
+  <!-- TailWind CSS (視覺樣式) -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- Firebase 相容版 SDK (即時資料庫) -->
+  <!-- Firebase 相容版 SDK (跨裝置即時資料庫) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -18,11 +18,11 @@
 </head>
 <body class="bg-gray-100 min-h-screen">
 
-  <!-- 頂部導覽列 -->
+  <!-- 頁頭選單 -->
   <header class="bg-white shadow-sm border-b border-gray-200 py-4 px-6 flex justify-between items-center">
     <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
       📅 工作室日程表
-      <span id="syncStatus" class="text-xs font-normal bg-green-100 text-green-700 px-2 py-0.5 rounded-full">雲端已同步</span>
+      <span id="syncStatus" class="text-xs font-normal bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">雲端連線中...</span>
     </h1>
     <div>
       <button id="loginBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition">
@@ -34,9 +34,9 @@
     </div>
   </header>
 
-  <!-- 主要內容區 -->
+  <!-- 主要內容區塊 -->
   <main class="max-w-4xl mx-auto p-4 sm:p-6">
-    <!-- 管理員操作區 (預設隱藏) -->
+    <!-- 管理員控制台 (登入後顯示) -->
     <div id="adminPanel" class="hidden bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
       <h2 class="text-lg font-bold text-gray-800 mb-4">➕ 新增 / 編輯日程</h2>
       <form id="eventForm" class="space-y-4">
@@ -47,7 +47,7 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">日程內容與時間</label>
-          <input type="text" id="eventTitle" placeholder="例如：14:00 - 16:00 王小姐拍攝" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+          <input type="text" id="eventTitle" placeholder="例如：14:00 - 16:00 帶本 / Party" required class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
         </div>
         <div class="flex gap-2">
           <button type="submit" class="bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm hover:bg-blue-700 transition">儲存日程</button>
@@ -56,40 +56,40 @@
       </form>
     </div>
 
-    <!-- 日程列表 display -->
+    <!-- 日程展示列表 -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
         <h2 class="font-bold text-gray-700">最新工作室預約狀況</h2>
-        <span class="text-xs text-gray-500">（即時連線更新中）</span>
+        <span class="text-xs text-gray-500">（跨裝置即時同步）</span>
       </div>
       <div id="eventList" class="divide-y divide-gray-100">
-        <div class="p-6 text-center text-gray-400">資料載入中...</div>
+        <div class="p-6 text-center text-gray-400">連線載入中...</div>
       </div>
     </div>
   </main>
 
-  <!-- JavaScript 邏輯 -->
+  <!-- 程式邏輯區塊 -->
   <script>
     // -------------------------------------------------------------
-    // 1. Firebase 資料庫配置設定 (需替換為你的 Firebase 資訊)
+    // 1. 帶入你專屬的 Firebase 設定資訊
     // -------------------------------------------------------------
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyAuuJDMEHBLPToulUTnqKyPSvmpB5RKjgQ",
+      authDomain: "studiocalender-f52d4.firebaseapp.com",
+      databaseURL: "https://studiocalender-f52d4-default-rtdb.firebaseio.com",
+      projectId: "studiocalender-f52d4",
+      storageBucket: "studiocalender-f52d4.firebasestorage.app",
+      messagingSenderId: "187677978550",
+      appId: "1:187677978550:web:57131e5e38f98c209b9b17"
     };
 
-    // 初始化 Firebase
+    // 初始化 Firebase 資料庫
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const eventsRef = db.ref('studio_events');
 
     // -------------------------------------------------------------
-    // 2. 狀態管理 (權限與資料)
+    // 2. 狀態管理 (管理者密碼與資料暫存)
     // -------------------------------------------------------------
     let isAdmin = false;
     let eventsData = {};
@@ -101,19 +101,19 @@
     const eventList = document.getElementById('eventList');
     const syncStatus = document.getElementById('syncStatus');
 
-    // 管理員登入
+    // 管理員登入邏輯
     loginBtn.addEventListener('click', () => {
       const password = prompt('請輸入負責人管理密碼：');
       if (password === '09101230') {
         isAdmin = true;
         updateAdminUI();
-        alert('登入成功！您可以新增與管理日程。');
+        alert('登入成功！您現在可以新增、編輯與刪除日程。');
       } else if (password !== null) {
         alert('密碼錯誤！');
       }
     });
 
-    // 退出登入
+    // 登出邏輯
     logoutBtn.addEventListener('click', () => {
       isAdmin = false;
       updateAdminUI();
@@ -133,9 +133,8 @@
     }
 
     // -------------------------------------------------------------
-    // 3. 雲端即時同步 (Realtime Listening)
+    // 3. 雲端即時監聽與同步 (Real-time Listening)
     // -------------------------------------------------------------
-    // 當 Firebase 雲端資料有變動時（無論是誰在別台設備修改），這裡會自動觸發
     eventsRef.on('value', (snapshot) => {
       eventsData = snapshot.val() || {};
       syncStatus.textContent = '雲端已同步';
@@ -144,11 +143,11 @@
     }, (error) => {
       syncStatus.textContent = '連線失敗';
       syncStatus.className = 'text-xs font-normal bg-red-100 text-red-700 px-2 py-0.5 rounded-full';
-      console.error(error);
+      console.error("Firebase 連線錯誤：", error);
     });
 
     // -------------------------------------------------------------
-    // 4. 新增 / 編輯日程 (寫入 Firebase)
+    // 4. 新增 / 編輯 / 刪除日程 (直接對 Firebase 操作)
     // -------------------------------------------------------------
     eventForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -158,7 +157,7 @@
       const date = document.getElementById('eventDate').value;
       const title = document.getElementById('eventTitle').value;
 
-      // 寫入/更新 Firebase
+      // 寫入雲端
       eventsRef.child(id).set({
         id: id,
         date: date,
@@ -179,7 +178,7 @@
       }
     };
 
-    // 編輯日程準備
+    // 準備編輯
     window.editEvent = function(id) {
       if (!isAdmin) return;
       const item = eventsData[id];
@@ -192,6 +191,7 @@
       }
     };
 
+    // 取消編輯
     document.getElementById('cancelBtn').addEventListener('click', () => {
       eventForm.reset();
       document.getElementById('eventId').value = '';
@@ -199,7 +199,7 @@
     });
 
     // -------------------------------------------------------------
-    // 5. 渲染日程列表到頁面上
+    // 5. 畫面渲染
     // -------------------------------------------------------------
     function renderEvents(data) {
       const keys = Object.keys(data);
@@ -208,7 +208,7 @@
         return;
       }
 
-      // 依日期排序
+      // 依預約日期排序
       const sortedEvents = keys.map(k => data[k]).sort((a, b) => a.date.localeCompare(b.date));
 
       let html = '';
