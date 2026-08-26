@@ -109,7 +109,7 @@
     .bg-other { background-color: #f1f5f9; color: #334155; }
     .bg-closed { background-color: #fef2f2; color: #991b1b; }
     
-    /* 公眾假期：紅色背景與紅色文字 */
+    /* 公眾假期：醒目紅色背景與紅色文字 */
     .bg-holiday { 
       background-color: #fee2e2 !important; 
       color: #dc2626 !important; 
@@ -419,25 +419,25 @@
     const db = firebase.database();
     const eventsRef = db.ref('studio_calendar_events');
 
-    // 內建 2026 年香港法定公眾假期數據
+    // 內建香港 2026 年法定公眾假期數據
     const hkHolidays2026 = [
-      { title: "元旦", date: "2026-01-01" },
-      { title: "農曆年初一", date: "2026-02-17" },
-      { title: "農曆年初二", date: "2026-02-18" },
-      { title: "農曆年初三", date: "2026-02-19" },
-      { title: "耶穌受難節", date: "2026-04-03" },
-      { title: "耶穌受難節翌日", date: "2026-04-04" },
-      { title: "清明節", date: "2026-04-05" },
-      { title: "復活節星期一", date: "2026-04-06" },
-      { title: "勞動節", date: "2026-05-01" },
-      { title: "佛誕", date: "2026-05-24" },
-      { title: "端午節", date: "2026-06-19" },
-      { title: "香港特別行政區成立紀念日", date: "2026-07-01" },
-      { title: "中秋節翌日", date: "2026-09-26" },
-      { title: "國慶日", date: "2026-10-01" },
-      { title: "重陽節", date: "2026-10-18" },
-      { title: "聖誕節", date: "2026-12-25" },
-      { title: "聖誕節後第一個周日", date: "2026-12-26" }
+      { id: "h_0101", title: "元旦", start: "2026-01-01", allDay: true, extendedProps: { isHoliday: true } },
+      { id: "h_0217", title: "農曆年初一", start: "2026-02-17", allDay: true, extendedProps: { isHoliday: true } },
+      { id: "h_0218", title: "農曆年初二", start: "2026-02-18", allDay: true, extendedProps: { isHoliday: true } },
+      { id: "h_0219", title: "農曆年初三", start: "2026-02-19", allDay: true, extendedProps: { isHoliday: true } },
+      { id: "h_0403", title: "耶穌受難節", start: "2026-04-03", allDay: true, extendedProps: { isHoliday: true } },
+      { id: "h_0404", title: "耶穌受難節翌日", start: "2026-04-04", allDay: true, extendedProps: { isHoliday: true } },
+      { id: "h_0405", title: "清明節", start: "2026-04-05", allDay: true, extendedProps: { isHoliday: true } },
+      { id: "h_0406", title: "復活節星期一", start: "2026-04-06", allDay: true, extendedProps: { isHoliday: true } },
+      { id: "h_0501", title: "勞動節", start: "2026-05-01", allDay: true, extendedProps: { isHoliday: true } },
+      { id: "h_0524", title: "佛誕", start: "2026-05-24", allDay: true, extendedProps: { isHoliday: true } },
+      { id: "h_0619", title: "端午節", start: "2026-06-19", allDay: true, extendedProps: { isHoliday: true } },
+      { id: "h_0701", title: "特區成立紀念日", start: "2026-07-01", allDay: true, extendedProps: { isHoliday: true } },
+      { id: "h_0926", title: "中秋節翌日", start: "2026-09-26", allDay: true, extendedProps: { isHoliday: true } },
+      { id: "h_1001", title: "國慶日", start: "2026-10-01", allDay: true, extendedProps: { isHoliday: true } },
+      { id: "h_1018", title: "重陽節", start: "2026-10-18", allDay: true, extendedProps: { isHoliday: true } },
+      { id: "h_1225", title: "聖誕節", start: "2026-12-25", allDay: true, extendedProps: { isHoliday: true } },
+      { id: "h_1226", title: "聖誕節後第一個周日", start: "2026-12-26", allDay: true, extendedProps: { isHoliday: true } }
     ];
 
     let isAdmin = false;
@@ -452,6 +452,9 @@
         initialView: 'dayGridMonth',
         height: 'auto',
         dayMaxEvents: false,
+
+        // 預先載入公眾假期
+        events: hkHolidays2026,
 
         headerToolbar: {
           left: 'prev,next today',
@@ -479,7 +482,7 @@
         eventContent: function(arg) {
           const props = arg.event.extendedProps || {};
           
-          // 如果是公眾假期
+          // 如果是香港公眾假期
           if (props.isHoliday) {
             let html = `
               <div class="event-card bg-holiday">
@@ -541,6 +544,7 @@
         },
 
         eventClick: function(info) {
+          // 若為公眾假期則不響應點擊彈窗
           if (info.event.extendedProps && info.event.extendedProps.isHoliday) {
             return;
           }
@@ -561,22 +565,20 @@
       calendar.render();
 
       const syncStatus = document.getElementById('syncStatus');
+      
+      // 雲端資料同步時，精準更新工作人員預約，保護假期不被刪除
       eventsRef.on('value', (snapshot) => {
         const cloudData = snapshot.val() || {};
-        calendar.removeAllEvents();
-
-        // 1. 載入內建公眾假期
-        hkHolidays2026.forEach(holiday => {
-          calendar.addEvent({
-            id: 'holiday_' + holiday.date,
-            title: holiday.title,
-            start: holiday.date,
-            allDay: true,
-            extendedProps: { isHoliday: true }
-          });
+        
+        // 移除日曆上現有的「使用者預約活動」（保留假期）
+        const currentEvents = calendar.getEvents();
+        currentEvents.forEach(e => {
+          if (!e.extendedProps || !e.extendedProps.isHoliday) {
+            e.remove();
+          }
         });
 
-        // 2. 載入雲端預約活動
+        // 重新加入雲端最新的預約活動
         Object.keys(cloudData).forEach(key => {
           calendar.addEvent(cloudData[key]);
         });
