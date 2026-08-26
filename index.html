@@ -109,7 +109,7 @@
     .bg-other { background-color: #f1f5f9; color: #334155; }
     .bg-closed { background-color: #fef2f2; color: #991b1b; }
     
-    /* 公眾假期特別顏色：紅色醒目顯示 */
+    /* 公眾假期：紅色背景與紅色文字 */
     .bg-holiday { 
       background-color: #fee2e2 !important; 
       color: #dc2626 !important; 
@@ -419,6 +419,27 @@
     const db = firebase.database();
     const eventsRef = db.ref('studio_calendar_events');
 
+    // 內建 2026 年香港法定公眾假期數據
+    const hkHolidays2026 = [
+      { title: "元旦", date: "2026-01-01" },
+      { title: "農曆年初一", date: "2026-02-17" },
+      { title: "農曆年初二", date: "2026-02-18" },
+      { title: "農曆年初三", date: "2026-02-19" },
+      { title: "耶穌受難節", date: "2026-04-03" },
+      { title: "耶穌受難節翌日", date: "2026-04-04" },
+      { title: "清明節", date: "2026-04-05" },
+      { title: "復活節星期一", date: "2026-04-06" },
+      { title: "勞動節", date: "2026-05-01" },
+      { title: "佛誕", date: "2026-05-24" },
+      { title: "端午節", date: "2026-06-19" },
+      { title: "香港特別行政區成立紀念日", date: "2026-07-01" },
+      { title: "中秋節翌日", date: "2026-09-26" },
+      { title: "國慶日", date: "2026-10-01" },
+      { title: "重陽節", date: "2026-10-18" },
+      { title: "聖誕節", date: "2026-12-25" },
+      { title: "聖誕節後第一個周日", date: "2026-12-26" }
+    ];
+
     let isAdmin = false;
     let calendar;
     let editingEventId = null;
@@ -431,25 +452,6 @@
         initialView: 'dayGridMonth',
         height: 'auto',
         dayMaxEvents: false,
-        
-        // 加入香港公眾假期 (自動網絡來源)
-        eventSources: [
-          {
-            url: 'https://date.nager.at/api/v3/PublicHolidays/2026/HK',
-            method: 'GET',
-            extraParams: {},
-            failure: function() { console.log('假期載入失敗'); },
-            success: function(rawEvents) {
-              return rawEvents.map(holiday => ({
-                id: 'holiday_' + holiday.date,
-                title: holiday.localName,
-                start: holiday.date,
-                allDay: true,
-                isHoliday: true
-              }));
-            }
-          }
-        ],
 
         headerToolbar: {
           left: 'prev,next today',
@@ -477,14 +479,14 @@
         eventContent: function(arg) {
           const props = arg.event.extendedProps || {};
           
-          // 如果是香港公眾假期
+          // 如果是公眾假期
           if (props.isHoliday) {
             let html = `
               <div class="event-card bg-holiday">
                 <div class="mobile-only mobile-simple-card">
                   <div class="mobile-staff" style="color: #dc2626;">🇭🇰 ${arg.event.title}</div>
                 </div>
-                <div class="desktop-only card-main" style="color: #dc2626;">🇭🇰 ${arg.event.title} (假期)</div>
+                <div class="desktop-only card-main" style="color: #dc2626;">🇭🇰 ${arg.event.title}</div>
               </div>
             `;
             return { html: html };
@@ -539,7 +541,6 @@
         },
 
         eventClick: function(info) {
-          // 如果點擊的是公眾假期則不響應管理選單
           if (info.event.extendedProps && info.event.extendedProps.isHoliday) {
             return;
           }
@@ -562,15 +563,20 @@
       const syncStatus = document.getElementById('syncStatus');
       eventsRef.on('value', (snapshot) => {
         const cloudData = snapshot.val() || {};
-        
-        // 僅移除使用者自訂活動，保留假期
-        const existingEvents = calendar.getEvents();
-        existingEvents.forEach(e => {
-          if (!e.extendedProps || !e.extendedProps.isHoliday) {
-            e.remove();
-          }
+        calendar.removeAllEvents();
+
+        // 1. 載入內建公眾假期
+        hkHolidays2026.forEach(holiday => {
+          calendar.addEvent({
+            id: 'holiday_' + holiday.date,
+            title: holiday.title,
+            start: holiday.date,
+            allDay: true,
+            extendedProps: { isHoliday: true }
+          });
         });
 
+        // 2. 載入雲端預約活動
         Object.keys(cloudData).forEach(key => {
           calendar.addEvent(cloudData[key]);
         });
@@ -723,7 +729,6 @@
       const newEndMs = new Date(newEnd).getTime();
 
       for (let ev of allEvents) {
-        // 跳過公眾假期與指定的修改項目
         if (ev.extendedProps && ev.extendedProps.isHoliday) continue;
         if (ignoreEventId && ev.id === ignoreEventId) continue;
         
