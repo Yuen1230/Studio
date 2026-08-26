@@ -96,42 +96,72 @@
 
     .fc-event {
       border: none !important;
-      border-radius: 4px !important;
+      border-radius: 6px !important;
       padding: 0 !important;
       cursor: pointer;
       overflow: hidden;
+      background: transparent !important;
     }
 
-    /* 卡片通用樣式 */
-    .event-card {
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-      padding: 3px 4px;
-      font-size: 10px;
-      line-height: 1.2;
-      border-radius: 4px;
-      width: 100%;
-      overflow: hidden;
-    }
-
+    /* 背景顏色樣式 */
     .bg-daiben { background-color: #e0f2fe; color: #0369a1; }
     .bg-party { background-color: #ffedd5; color: #c2410c; }
     .bg-other { background-color: #f1f5f9; color: #334155; }
     .bg-closed { background-color: #fef2f2; color: #991b1b; }
-
-    .card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-weight: 600;
-      white-space: nowrap;
+    
+    /* 公眾假期特別顏色：紅色醒目顯示 */
+    .bg-holiday { 
+      background-color: #fee2e2 !important; 
+      color: #dc2626 !important; 
+      font-weight: 700;
     }
-    .card-main { font-weight: 700; font-size: 11px; }
-    .card-footer { font-size: 9px; opacity: 0.8; }
 
-    /* 手機版極簡垂直兩行排版 */
-    @media (max-width: 768px) {
+    /* --- 💻 電腦版：填滿整個格子 (寬度 > 1024px) --- */
+    @media (min-width: 1025px) {
+      .mobile-only {
+        display: none !important;
+      }
+
+      .fc-daygrid-event-harness {
+        width: 100% !important;
+      }
+
+      .event-card {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        padding: 6px 8px;
+        border-radius: 6px;
+        box-sizing: border-box;
+      }
+
+      .card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        font-size: 11px;
+      }
+
+      .card-main {
+        font-weight: 700;
+        font-size: 12px;
+        margin-top: 2px;
+      }
+
+      .card-footer {
+        font-size: 10px;
+        opacity: 0.8;
+        margin-top: 1px;
+      }
+    }
+
+    /* --- 📱 平板 & 手機版：隨內容的大小顯示 (寬度 <= 1024px) --- */
+    @media (max-width: 1024px) {
+      .desktop-only {
+        display: none !important;
+      }
+
       body { padding: 8px 4px; }
       
       .header { flex-direction: column; align-items: flex-start; }
@@ -149,18 +179,17 @@
         padding: 0 !important;
       }
 
-      .desktop-only {
-        display: none !important;
-      }
-
       .event-card {
-        padding: 2px 3px;
+        display: inline-flex;
+        padding: 3px 6px;
+        border-radius: 6px;
+        width: auto;
+        max-width: 100%;
       }
 
       .mobile-simple-card {
         display: flex;
         flex-direction: column;
-        width: 100%;
       }
 
       .mobile-time {
@@ -182,13 +211,7 @@
       }
     }
 
-    @media (min-width: 769px) {
-      .mobile-only {
-        display: none !important;
-      }
-    }
-
-    /* Modal 彈出視窗通用樣式 */
+    /* Modal 通用樣式 */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -227,7 +250,7 @@
     .form-row { display: flex; gap: 10px; }
     .form-row .form-group { flex: 1; }
 
-    /* 詳情頁特定樣式 */
+    /* 詳情頁樣式 */
     .detail-item {
       display: flex;
       justify-content: space-between;
@@ -409,6 +432,25 @@
         height: 'auto',
         dayMaxEvents: false,
         
+        // 加入香港公眾假期 (自動網絡來源)
+        eventSources: [
+          {
+            url: 'https://date.nager.at/api/v3/PublicHolidays/2026/HK',
+            method: 'GET',
+            extraParams: {},
+            failure: function() { console.log('假期載入失敗'); },
+            success: function(rawEvents) {
+              return rawEvents.map(holiday => ({
+                id: 'holiday_' + holiday.date,
+                title: holiday.localName,
+                start: holiday.date,
+                allDay: true,
+                isHoliday: true
+              }));
+            }
+          }
+        ],
+
         headerToolbar: {
           left: 'prev,next today',
           center: 'title',
@@ -434,6 +476,20 @@
 
         eventContent: function(arg) {
           const props = arg.event.extendedProps || {};
+          
+          // 如果是香港公眾假期
+          if (props.isHoliday) {
+            let html = `
+              <div class="event-card bg-holiday">
+                <div class="mobile-only mobile-simple-card">
+                  <div class="mobile-staff" style="color: #dc2626;">🇭🇰 ${arg.event.title}</div>
+                </div>
+                <div class="desktop-only card-main" style="color: #dc2626;">🇭🇰 ${arg.event.title} (假期)</div>
+              </div>
+            `;
+            return { html: html };
+          }
+
           const catSplitted = (props.category || "工作|#3b82f6").split('|');
           const categoryName = catSplitted[0];
           
@@ -455,7 +511,7 @@
 
           let html = `
             <div class="event-card ${bgClass}">
-              <!-- 手機版：上下兩行分開呈現 -->
+              <!-- 平板及手機版 -->
               <div class="mobile-only mobile-simple-card">
                 ${categoryName === "不開放" ? `
                   <div class="mobile-staff" style="color: #991b1b;">🚫不開放</div>
@@ -465,7 +521,7 @@
                 `}
               </div>
 
-              <!-- 電腦版：完整卡片 -->
+              <!-- 電腦版 -->
               <div class="desktop-only card-top">
                 <span>${arg.timeText}</span>
                 ${categoryName !== "不開放" ? `<span>👤 ${staff}</span>` : ''}
@@ -483,13 +539,16 @@
         },
 
         eventClick: function(info) {
+          // 如果點擊的是公眾假期則不響應管理選單
+          if (info.event.extendedProps && info.event.extendedProps.isHoliday) {
+            return;
+          }
+
           activeClickedEvent = info.event;
 
           if (isAdmin) {
-            // 管理員：打開修改/刪除操作選單
             document.getElementById('actionModal').style.display = 'flex';
           } else {
-            // 普通訪客：開啟預約詳情彈窗
             showViewDetailModal(info.event);
           }
         },
@@ -503,7 +562,15 @@
       const syncStatus = document.getElementById('syncStatus');
       eventsRef.on('value', (snapshot) => {
         const cloudData = snapshot.val() || {};
-        calendar.removeAllEvents();
+        
+        // 僅移除使用者自訂活動，保留假期
+        const existingEvents = calendar.getEvents();
+        existingEvents.forEach(e => {
+          if (!e.extendedProps || !e.extendedProps.isHoliday) {
+            e.remove();
+          }
+        });
+
         Object.keys(cloudData).forEach(key => {
           calendar.addEvent(cloudData[key]);
         });
@@ -518,7 +585,6 @@
       });
     });
 
-    // 顯示訪客詳情彈窗
     function showViewDetailModal(event) {
       const props = event.extendedProps || {};
       const catSplitted = (props.category || "工作|#3b82f6").split('|');
@@ -657,6 +723,8 @@
       const newEndMs = new Date(newEnd).getTime();
 
       for (let ev of allEvents) {
+        // 跳過公眾假期與指定的修改項目
+        if (ev.extendedProps && ev.extendedProps.isHoliday) continue;
         if (ignoreEventId && ev.id === ignoreEventId) continue;
         
         const evStartMs = ev.start.getTime();
